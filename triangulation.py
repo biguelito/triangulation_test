@@ -1,4 +1,3 @@
-from scipy.spatial import Delaunay
 import numpy as np
 import matplotlib.pyplot as plt
 from shapely.geometry import Point
@@ -7,17 +6,52 @@ from flask import Flask
 from flask_cors import CORS
 from flask import request
 
-points = [
-    [0,0], [0, 1.1],
-    [1, 0], [1,1], 
+def connectpoints(p1,p2):
+    x1, x2 = x_list[p1], x_list[p2]
+    y1, y2 = y_list[p1], y_list[p2]
+    plt.plot([x1,x2],[y1,y2],'k-')
+    return
+
+
+def connecting(p):
+    points = p + [p[0]]
+    for p in range(len(points)-1):
+        connectpoints(points[p], points[p+1])
+    return
+
+
+def create_sala_blue():
+    plt.plot(x_list, y_list, 'o')
+    connecting(pontos_cafe)
+    connecting(pontos_sala_reuniao)
+    connecting(pontos_sala_socios)
+    connecting(pontos_copa)
+    connecting(pontos_area_trabalho)
+
+sala_blue = [
+    [0,0], [6.7, 0], [10.05, 0], [13.4, 0], 
+    [0, 3.3], [2.75, 3.3], [6.7, 3.3], [10.05, 3.3], [13.4, 3.3],
+    [0, 5.2], [2.75, 5.2], [6.7, 5.2], [13.4, 5.2]
 ]
-tri = Delaunay(points)
+
+np_sala_blue = np.array(sala_blue)
+x_list = np_sala_blue[:,0]
+y_list = np_sala_blue[:,1]
+
+pontos_cafe = [6,11,12,8]
+pontos_sala_reuniao = [2,7,8,3]
+pontos_sala_socios = [1,6,7,2]
+pontos_copa = [4,9,10,5]
+pontos_area_trabalho = [0,1,6,11,10,5,4]
 
 polygons = {
-    'a': Polygon([[0,0], [0,1.1], [1,1]]),
-    'b': Polygon([[0,0], [1,0], [1,1]])
+    "sala_reuniao": Polygon([sala_blue[i] for i in pontos_sala_reuniao]),
+    "copa": Polygon([sala_blue[i] for i in pontos_copa]),
+    "cafe": Polygon([sala_blue[i] for i in pontos_cafe]),
+    "area_trabalho": Polygon([sala_blue[i] for i in pontos_area_trabalho]),
+    "sala_socios": Polygon([sala_blue[i] for i in pontos_sala_socios]),
 }
-np_points = np.array(points)
+
 
 app = Flask(__name__)
 CORS(app)
@@ -28,15 +62,11 @@ def rooturl():
     return 'incredible api'
 
 
-@app.route('/delaunay', methods=['POST'])
-def calcondelaunay():
-    plt.clf()
-    plt.triplot(np_points[:,0], np_points[:,1], tri.simplices)
-    plt.plot(np_points[:,0], np_points[:,1], 'o')
-
+@app.route('/locate', methods=['POST'])
+def locate():
     postpoint = Point(request.json['x'],request.json['y'])
     print(postpoint)
-
+    create_sala_blue()
     try: 
         for polygon_name, polygon in polygons.items():
             if polygon.contains(postpoint):
