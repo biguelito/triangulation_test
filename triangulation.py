@@ -72,7 +72,7 @@ def locate():
             if polygon.contains(postpoint):
                 print(f'ponto dentro de {polygon_name}')
                 plt.plot(postpoint.x, postpoint.y, 'g*')
-                plt.savefig('example_fig.png')
+                plt.savefig('test_fig.png')
                 plt.close()
                 return {'Area': polygon_name}
         return {'Area': "nenhuma"}
