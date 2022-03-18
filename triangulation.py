@@ -5,6 +5,9 @@ from shapely.geometry.polygon import Polygon
 from flask import Flask
 from flask_cors import CORS
 from flask import request
+from beacon import Beacon
+import math
+from circle import Circle
 
 def connectpoints(p1,p2):
     x1, x2 = x_list[p1], x_list[p2]
@@ -12,13 +15,12 @@ def connectpoints(p1,p2):
     plt.plot([x1,x2],[y1,y2],'k-')
     return
 
-
 def connecting(p):
     points = p + [p[0]]
     for p in range(len(points)-1):
         connectpoints(points[p], points[p+1])
+    
     return
-
 
 def create_sala_blue():
     plt.plot(x_list, y_list, 'o')
@@ -27,6 +29,20 @@ def create_sala_blue():
     connecting(pontos_sala_socios)
     connecting(pontos_copa)
     connecting(pontos_area_trabalho)
+    plt.plot(beacon_1.get_x(), beacon_1.get_y(), 'ro')
+    plt.plot(beacon_2.get_x(), beacon_2.get_y(), 'ro')
+    plt.plot(beacon_3.get_x(), beacon_3.get_y(), 'ro')
+    plt.plot(beacon_4.get_x(), beacon_4.get_y(), 'ro')
+    plt.plot(beacon_5.get_x(), beacon_5.get_y(), 'ro')
+    
+    return
+
+def find_fourth_coordinate(p3, circle_intersection, result):
+    if math.dist(p3, circle_intersection[0]) == result:
+        return circle_intersection[0]
+    
+    return circle_intersection[1]
+
 
 sala_blue = [
     [0,0], [6.7, 0], [10.05, 0], [13.4, 0], 
@@ -52,6 +68,18 @@ polygons = {
     "sala_socios": Polygon([sala_blue[i] for i in pontos_sala_socios]),
 }
 
+beacon_1 = Beacon(1, 8.375, 3.3)
+beacon_2 = Beacon(2, 13.4, 4.5)
+beacon_3 = Beacon(3, 2.75, 4.5)
+beacon_4 = Beacon(4, 0, 1.5)
+beacon_5 = Beacon(5, 10.05, 1.5)
+beacons = {
+    beacon_1.id: beacon_1,
+    beacon_2.id: beacon_2,
+    beacon_3.id: beacon_3,
+    beacon_4.id: beacon_4,
+    beacon_5.id: beacon_5
+}
 
 app = Flask(__name__)
 CORS(app)
@@ -64,17 +92,35 @@ def rooturl():
 
 @app.route('/locate', methods=['POST'])
 def locate():
-    postpoint = Point(request.json['x'],request.json['y'])
-    print(postpoint)
-    create_sala_blue()
+    posted_beacons = request.json['beacons']
+    precision = 5
+    nearests_beacon = [
+        (beacons[posted_beacons[0]["id"]].point, round(posted_beacons[0]["distance"], precision)),
+        (beacons[posted_beacons[1]["id"]].point, round(posted_beacons[1]["distance"], precision)),
+        (beacons[posted_beacons[2]["id"]].point, round(posted_beacons[2]["distance"], precision)),
+    ]
+    sorted_distances = sorted(nearests_beacon, key=lambda x : x[1])
+
+    p1, r1 = sorted_distances[0]
+    p2, r2 = sorted_distances[1]
+    p3, r3 = sorted_distances[2]
+    
+    circle_p1 = Circle(p1[0], p1[1], r1)
+    circle_p2 = Circle(p2[0], p2[1], r2)
+    p4 = find_fourth_coordinate(p3, circle_p1.circle_intersect(circle_p2), r3) 
+    
+    point_n = Point(p4[0], p4[1])
     try: 
         for polygon_name, polygon in polygons.items():
-            if polygon.contains(postpoint):
+            if polygon.contains(point_n):
                 print(f'ponto dentro de {polygon_name}')
-                plt.plot(postpoint.x, postpoint.y, 'g*')
+                create_sala_blue()    
+                plt.plot(point_n.x, point_n.y, 'g*')
                 plt.savefig('test_fig.png')
                 plt.close()
+        
                 return {'Area': polygon_name}
         return {'Area': "nenhuma"}
+    
     except Exception as e:
         return {'Erro': e.args()}
