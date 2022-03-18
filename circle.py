@@ -25,11 +25,11 @@ class Circle(object):
         D = round(math.sqrt(Dx**2 + Dy**2), PRECISION)
         # Distance between circle centres
         if D > R1 + R2:
-            return "The circles do not intersect"
+            return (0, 0, "The circles do not intersect")
         elif D < math.fabs(R2 - R1):
-            return "No Intersect - One circle is contained within the other"
+            return (0, 0, "No Intersect - One circle is contained within the other")
         elif D == 0 and R1 == R2:
-            return "No Intersect - The circles are equal and coincident"
+            return (0, 0, "No Intersect - The circles are equal and coincident")
         else:
             if D == R1 + R2 or D == R1 - R2:
                 CASE = "The circles intersect at a single point"

@@ -38,10 +38,12 @@ def create_sala_blue():
     return
 
 def find_fourth_coordinate(p3, circle_intersection, result):
+    if (circle_intersection[0] == 0 and circle_intersection[1] == 0):
+        return (False, circle_intersection[2])
+
     if math.dist(p3, circle_intersection[0]) == result:
-        return circle_intersection[0]
-    
-    return circle_intersection[1]
+        return (True, circle_intersection[0])
+    return (True, circle_intersection[1])
 
 
 sala_blue = [
@@ -107,8 +109,10 @@ def locate():
     
     circle_p1 = Circle(p1[0], p1[1], r1)
     circle_p2 = Circle(p2[0], p2[1], r2)
-    p4 = find_fourth_coordinate(p3, circle_p1.circle_intersect(circle_p2), r3) 
-    
+    resultado, p4 = find_fourth_coordinate(p3, circle_p1.circle_intersect(circle_p2), r3) 
+    if not resultado:
+        return {'Erro': p4} 
+
     point_n = Point(p4[0], p4[1])
     try: 
         for polygon_name, polygon in polygons.items():
