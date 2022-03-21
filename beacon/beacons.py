@@ -1,4 +1,5 @@
-from beacon import Beacon
+
+from beacon.beacon import Beacon
 
 class Beacons:
 
@@ -19,3 +20,6 @@ class Beacons:
         if id in self.beacons.keys():
             return self.beacons[id]
         return None
+
+    def get_beacons(self):
+        return self.beacons.values()

@@ -1,92 +1,10 @@
-import matplotlib.pyplot as plt
 from shapely.geometry import Point
 from flask import Flask
 from flask_cors import CORS
 from flask import request
-from area import Area
-from beacons import Beacons
-from circle import Circle
-
-def connectpoints(p1,p2):
-    x1, x2 = x_list[p1], x_list[p2]
-    y1, y2 = y_list[p1], y_list[p2]
-    plt.plot([x1,x2],[y1,y2],'k-')
-    return
-
-def connecting(p):
-    points = p + [p[0]]
-    for p in range(len(points)-1):
-        connectpoints(points[p], points[p+1])
-    
-    return
-
-def create_sala_blue():
-    plt.plot(x_list, y_list, 'o')
-
-    connecting(pontos_cafe)
-    connecting(pontos_sala_reuniao)
-    connecting(pontos_sala_socios)
-    connecting(pontos_copa)
-    connecting(pontos_area_trabalho)
-    
-    plt.plot(beacon_1.get_x(), beacon_1.get_y(), 'ro')
-    plt.text(beacon_1.get_x()+0.2, beacon_1.get_y(), '1')
-    plt.plot(beacon_2.get_x(), beacon_2.get_y(), 'ro')
-    plt.text(beacon_2.get_x()-0.5, beacon_2.get_y(), '2')
-    plt.plot(beacon_3.get_x(), beacon_3.get_y(), 'ro')
-    plt.text(beacon_3.get_x()+0.2, beacon_3.get_y(), '3')
-    plt.plot(beacon_4.get_x(), beacon_4.get_y(), 'ro')
-    plt.text(beacon_4.get_x()+0.2, beacon_4.get_y(), '4')
-    plt.plot(beacon_5.get_x(), beacon_5.get_y(), 'ro')
-    plt.text(beacon_5.get_x()-0.5, beacon_5.get_y(), '5')
-    
-    return
-
-# def find_fourth_coordinate(p3, circle_intersection, result):
-#     if (circle_intersection[0] == 0 and circle_intersection[1] == 0):
-#         return (False, circle_intersection[2])
-
-#     if math.dist(p3, circle_intersection[0]) == result:
-#         return (True, circle_intersection[0])
-#     return (True, circle_intersection[1])
-
-
-# area_pontos = [
-#     [0,0], [6.7, 0], [10.05, 0], [13.4, 0], 
-#     [0, 3.3], [2.75, 3.3], [6.7, 3.3], [10.05, 3.3], [13.4, 3.3],
-#     [0, 5.2], [2.75, 5.2], [6.7, 5.2], [13.4, 5.2]
-# ]
-
-# np_area_pontos = np.array(area_pontos)
-# x_list = np_area_pontos[:,0]
-# y_list = np_area_pontos[:,1]
-
-# pontos_cafe = [6,11,12,8]
-# pontos_sala_reuniao = [2,7,8,3]
-# pontos_sala_socios = [1,6,7,2]
-# pontos_copa = [4,9,10,5]
-# pontos_area_trabalho = [0,1,6,11,10,5,4]
-
-# polygons = {
-#     "sala_reuniao": Polygon([area_pontos[i] for i in pontos_sala_reuniao]),
-#     "copa": Polygon([area_pontos[i] for i in pontos_copa]),
-#     "cafe": Polygon([area_pontos[i] for i in pontos_cafe]),
-#     "area_trabalho": Polygon([area_pontos[i] for i in pontos_area_trabalho]),
-#     "sala_socios": Polygon([area_pontos[i] for i in pontos_sala_socios]),
-# }
-
-# beacon_1 = Beacon(1, 8.375, 3.3)
-# beacon_2 = Beacon(2, 13.4, 4.5)
-# beacon_3 = Beacon(3, 2.75, 4.5)
-# beacon_4 = Beacon(4, 0, 1.5)
-# beacon_5 = Beacon(5, 10.05, 1.5)
-# beacons = {
-#     beacon_1.id: beacon_1,
-#     beacon_2.id: beacon_2,
-#     beacon_3.id: beacon_3,
-#     beacon_4.id: beacon_4,
-#     beacon_5.id: beacon_5
-# }
+from area.area import Area
+from beacon.beacons import Beacons
+from circle.circle import Circle
 
 area_pontos = [
     [0,0], [6.7, 0], [10.05, 0], [13.4, 0], 
@@ -95,11 +13,11 @@ area_pontos = [
 ]
 
 area = Area(area_pontos)
-area.Criar_Poligono('cafe', [6,11,12,8])
-area.Criar_Poligono('sala_reuniao', [2,7,8,3])
-area.Criar_Poligono('sala_socios', [1,6,7,2])
-area.Criar_Poligono('copa', [4,9,10,5])
-area.Criar_Poligono('area_trabalho', [0,1,6,11,10,5,4])
+area.Criar_Poligono('cafe', [[6.7, 3.3], [6.7, 5.2], [13.4, 5.2], [13.4, 3.3]])
+area.Criar_Poligono('sala_reuniao', [[10.05, 0], [10.05, 3.3], [13.4, 3.3], [13.4, 0]])
+area.Criar_Poligono('sala_socios', [[6.7, 0], [6.7, 3.3], [10.05, 3.3], [10.05, 0]])
+area.Criar_Poligono('copa', [[0, 3.3], [0, 5.2], [2.75, 5.2], [2.75, 3.3]])
+area.Criar_Poligono('area_trabalho', [[0, 0], [6.7, 0], [6.7, 3.3], [6.7, 5.2], [2.75, 5.2], [2.75, 3.3], [0, 3.3]])
 
 beacons = Beacons()
 beacons.criar(1, 8.375, 3.3)
@@ -135,31 +53,29 @@ def locate():
         return {'Erro': p4} 
 
     point_n = Point(p4[0], p4[1])
+    
+    retorno = {
+        'Area': None,
+        'x': None,
+        'y': None,
+        'Erro': None
+    }
     try: 
-        for polygon_name, polygon in area.get_poligonos().items():
-            if polygon.contains(point_n):
-                # create_sala_blue()    
-                # plt.plot(point_n.x, point_n.y, 'g*')
-                # plt.savefig('test_fig.png')
-                # plt.close()
         
-                return {
-                    'Area': polygon_name,
-                    'x': point_n.x,
-                    'y': point_n.y,
-                    'Erro': None
-                }
-        return {
-            'Area': None,
-            'x': point_n.x,
-            'y': point_n.y,
-            'Erro': None
-        }
+        for polygon_name, polygon in area.get_poligonos().items():
+            if polygon[0].contains(point_n):
+                area.desenhar_ponto(point_n.x, point_n.y, 'g*')
+                area.desenhar_area(beacons.get_beacons())
+
+                retorno['Area'] = polygon_name
+                retorno['x'] = point_n.x
+                retorno['y'] = point_n.y
+                return retorno
+        
+        retorno['x'] = point_n.x
+        retorno['y'] = point_n.y
+        return retorno
     
     except Exception as e:
-        return {
-            'Area': None,
-            'x': None,
-            'y': None,
-            'Erro': e.args
-        }
+        retorno['Erro'] = e.args
+        return retorno
