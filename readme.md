@@ -9,3 +9,9 @@ pip3 install -r .\requirements.txt
 ```
 
 O arquivo triangulation possui um microsservico em flask que recebe um (x, y) por post no endpoint /locate para definir onde está esse ponto no plano da area
+
+Para iniciar o microsserviço utilize:
+```sh
+$env:FLASK_APP = "triangulation"
+flask run
+```
