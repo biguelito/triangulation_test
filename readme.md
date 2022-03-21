@@ -8,6 +8,4 @@ python -m venv venv
 pip3 install -r .\requirements.txt
 ```
 
-O arquivo learn_triangulation possui um caminho num notebook de como uma sala hipotética evoluiu pra distribuiçao poligonal
-
-O arquivo triangulation possui um microsservico em flask que recebe um x e y por post para definir onde está esse ponto no plano da distribuição diagonal
+O arquivo triangulation possui um microsservico em flask que recebe um (x, y) por post no endpoint /locate para definir onde está esse ponto no plano da area
